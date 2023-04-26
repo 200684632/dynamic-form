@@ -7,7 +7,7 @@
           :key="groupId"
           :title="group.title"
           :layout="layout"
-          :round="false"
+          :round="round"
         >
           <template v-for="itemName in group?.items">
             <d-form-item
@@ -18,6 +18,7 @@
               :disabled="disabled"
               :readonly="readonly"
               :label-width="labelWidth"
+              :hide-label="hideLabel"
               :colon="colon"
               :required-mark-position="requiredMarkPosition"
               :error-message="store?.errorMessages?.[itemName]!"
@@ -37,6 +38,7 @@
           :disabled="disabled"
           :readonly="readonly"
           :label-width="labelWidth"
+          :hide-label="hideLabel"
           :layout="layout"
           :colon="colon"
           :required-mark-position="requiredMarkPosition"

@@ -21,10 +21,11 @@
 
     .shiki {
       margin-top: 0;
+      background: none !important;
     }
 
     &--h5 {
-      height: 450px;
+      height: 500px;
       margin: var(--d-gap-sm) 0;
 
       #{$prefix} {
@@ -56,6 +57,10 @@
           padding: 0;
           overflow: hidden;
         }
+
+        &__toolbar {
+          margin-top: 0;
+        }
       }
     }
   }
@@ -65,17 +70,52 @@
   }
 
   &__toolbar {
+    display: flex;
+    justify-content: space-between;
     margin-top: var(--d-gap-sm);
     padding: var(--d-gap-xs) var(--d-gap-sm);
     border-top: 1px dashed var(--d-border-color);
     text-align: center;
 
-    > * {
+    .d-space__item > * {
       cursor: pointer;
     }
 
     &--active {
       border-bottom: 1px dashed var(--d-border-color);
+    }
+
+    img {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+    }
+  }
+
+  &__qrcode {
+    position: relative;
+
+    &-trigger {
+      &:hover + * {
+        display: initial;
+      }
+    }
+
+    &-img {
+      position: absolute;
+      top: -100%;
+      right: 0;
+      display: none;
+      width: 100px;
+      height: 100px;
+      border: var(--d-border);
+      transform: translate(0px, -86px);
+
+      img {
+        width: 100px;
+        height: 100px;
+        margin: initial !important;
+      }
     }
   }
 
@@ -84,6 +124,19 @@
 
     &--active {
       display: block;
+    }
+  }
+
+  &__copy {
+    width: 22px;
+    height: 24px;
+    overflow: hidden;
+
+    &-scroll {
+      transition: 0.3s;
+      &--success {
+        transform: translateY(-50%);
+      }
     }
   }
 }

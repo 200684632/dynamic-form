@@ -59,6 +59,7 @@
 
                 &__content {
                   width: 100%;
+                  margin-top: var(--d-gap-xxs);
                 }
               }
             }
@@ -118,6 +119,14 @@
     font-size: var(--d-font-size-sm);
     line-height: var(--d-line-height-xs);
     margin-top: var(--d-gap-xs);
+  }
+
+  &__description {
+    margin-top: var(--d-gap-xs);
+    font-size: var(--d-font-size-sm);
+    line-height: var(--d-line-height-xs);
+    color: var(--d-secondary-text-color);
+    white-space: pre-wrap;
   }
 
   &__right-icon,

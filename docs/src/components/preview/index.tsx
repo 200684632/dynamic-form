@@ -1,40 +1,68 @@
-import { defineComponent, PropType, ref } from 'vue'
+import { defineComponent, CSSProperties, ref, watch } from 'vue'
 import { createNamespace } from '@/utils/bem'
-import './style.scss'
 import { useRoute } from 'vue-router'
 import { PLAYGROUND_SHORT_URL } from '@doc/constants'
-import { isNumber } from '@xuanmo/javascript-utils'
+import QRCode from 'qrcode'
+import qs from 'qs'
+import { addUnit } from '@/utils'
+import qrcodeIcon from '../../assets/images/QRCode.svg'
+import playgroundIcon from '../../assets/images/CodeSandbox.svg'
+import CopyCode from './copy-code.vue'
+import './style.scss'
 
 const [name, bem] = createNamespace('doc-preview')
 
 const props = {
-  client: {
-    type: String as PropType<'PC' | 'H5'>,
-    default: 'H5'
-  },
-  source: { type: String, default: '' },
-  playground: { type: String },
-  preview: { type: Boolean },
-  width: { type: Number },
-  height: { type: Number }
+  params: String,
+  source: String
 }
 
 const DocPreview = defineComponent({
   name,
+  components: {
+    'copy-code': CopyCode
+  },
   props,
   setup(props, { slots }) {
     const route = useRoute()
     const showCode = ref(false)
-    const toggleCodeVisible = () => {
-      showCode.value = !showCode.value
-    }
+    const qrcode = ref('')
+    const playgroundRef = ref<HTMLIFrameElement | null>(null)
+    const demoURL = ref('')
+
+    watch(
+      () => route,
+      () => {
+        const name = route.path.match(/\/([\w-]+)$/)?.[1]
+        demoURL.value = `${window.location.origin}${import.meta.env.BASE_URL.replace(
+          /\/$/,
+          ''
+        )}/demo/${name}`
+        QRCode.toDataURL(demoURL.value).then((url) => {
+          qrcode.value = url
+        })
+      },
+      {
+        immediate: true
+      }
+    )
+
     return () => {
-      const { client, source, playground, height, width } = props
-      const isMobile = client?.toUpperCase() === 'H5'
+      const { client = 'PC', playground, height, width } = qs.parse(props.params!)
+      const isMobile = client === 'Mobile'
+
+      const wrapperStyle = {
+        width: addUnit(width as string),
+        height: addUnit(height as string)
+      } as CSSProperties
+
+      const toggleCodeVisible = () => {
+        showCode.value = !showCode.value
+      }
 
       // PC 模版
       const pcContent =
-        !isMobile && playground === 'undefined' ? (
+        !isMobile && !playground ? (
           <>
             <div className={bem('runtime')}>{slots.default?.()}</div>
             <div className={bem('toolbar', { active: showCode.value })}>
@@ -42,7 +70,7 @@ const DocPreview = defineComponent({
             </div>
             <div
               className={bem('code', { active: showCode.value })}
-              v-html={decodeURIComponent(source)}
+              v-html={decodeURIComponent(props.source as string)}
             />
           </>
         ) : null
@@ -53,38 +81,47 @@ const DocPreview = defineComponent({
           <div className={bem('content')}>
             <div
               className={bem('code', { active: showCode.value })}
-              v-html={decodeURIComponent(source)}
+              v-html={decodeURIComponent(props.source as string)}
             />
             <div className={bem('runtime')}>
-              <iframe src={`/demo${route.path}?preview=true`} />
+              <iframe src={`${demoURL.value}?preview=true`} />
             </div>
           </div>
           <div className={bem('toolbar')}>
-            {playground && (
-              <a href={playground} target="_blank">
-                <d-button fill="none">在线编辑</d-button>
-              </a>
-            )}
+            <d-space>
+              <copy-code code={props.source} />
+            </d-space>
+            <d-space gap={10}>
+              <div className={bem('qrcode')}>
+                <img className={bem('qrcode-trigger')} src={qrcodeIcon} />
+                <div className={bem('qrcode-img')}>
+                  <img src={qrcode.value} />
+                </div>
+              </div>
+              {playground && (
+                <a
+                  href={`${PLAYGROUND_SHORT_URL}${playground}`}
+                  target="_blank"
+                  title="在 Playground 中编辑"
+                >
+                  <img src={playgroundIcon} />
+                </a>
+              )}
+            </d-space>
           </div>
         </div>
       ) : null
 
       // 演练场
       const playgroundContent =
-        playground !== 'undefined' ? (
-          <div
-            className={bem('playground')}
-            style={{
-              width: isNumber(width) ? `${width}px` : width,
-              height: isNumber(height) ? `${height}px` : height
-            }}
-          >
-            <iframe src={`${PLAYGROUND_SHORT_URL}${playground}`} />
+        playground && !isMobile ? (
+          <div className={bem('playground')}>
+            <iframe ref={playgroundRef} src={`${PLAYGROUND_SHORT_URL}${playground}`} />
           </div>
         ) : null
 
       return (
-        <div class={bem('wrapper', { h5: isMobile })}>
+        <div class={bem('wrapper', { h5: isMobile })} style={wrapperStyle}>
           {pcContent}
           {mobileContent}
           {playgroundContent}
